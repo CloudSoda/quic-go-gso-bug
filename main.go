@@ -97,36 +97,16 @@ func serverCommand() error {
 		return err
 	}
 	defer lis.Close()
-	func generateTLSConfig(hostnames ...string) *tls.Config {
-		key, err := rsa.GenerateKey(rand.Reader, 1024)
+
+	fmt.Printf("Listening on port %d…\n", port)
+	for {
+		qc, err := lis.Accept(context.Background())
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			continue
 		}
-	
-		template := x509.Certificate{
-			SerialNumber: big.NewInt(1),
-			NotBefore:    time.Now(),
-			NotAfter:     time.Now().Add(365 * 24 * time.Hour),
-			DNSNames:     hostnames,
-		}
-		certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
-		if err != nil {
-			panic(err)
-		}
-	
-		keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
-		certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
-	
-		tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
-		if err != nil {
-			panic(err)
-		}
-	
-		return &tls.Config{
-			Certificates: []tls.Certificate{tlsCert},
-		}
-	}
-	
+
+		go handleUserInput(qc)
 		go handlePings(qc)
 	}
 }
