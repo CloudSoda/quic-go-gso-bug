@@ -132,6 +132,7 @@ func handleUserInput(conn quic.Connection) {
 			fmt.Printf("Writing ping: %v\n", err)
 			os.Exit(1)
 		}
+		s.Close()
 
 		buf := make([]byte, 4)
 		if _, err := s.Read(buf); err != nil {
@@ -145,7 +146,6 @@ func handleUserInput(conn quic.Connection) {
 			os.Exit(1)
 		}
 		fmt.Println(time.Since(start))
-		s.Close()
 	}
 }
 
@@ -157,8 +157,7 @@ func handlePings(conn quic.Connection) {
 			os.Exit(1)
 		}
 
-		buf := make([]byte, 4)
-		if _, err := s.Read(buf); err != nil {
+		buf, err := io.ReadAll(s); err != nil {
 			fmt.Print(err)
 			os.Exit(1)
 		}
