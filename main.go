@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/qlog"
 )
 
 func main() {
@@ -65,6 +66,7 @@ func clientCommand(args []string) error {
 	}
 	conn, err := tr.Dial(context.Background(), udpAddr, tlsCfg, &quic.Config{
 		MaxIdleTimeout: 5 * time.Minute,
+		Tracer:         qlog.DefaultTracer,
 	})
 	if err != nil {
 		return err
@@ -92,6 +94,7 @@ func serverCommand() error {
 
 	lis, err := tr.Listen(generateTLSConfig("localhost"), &quic.Config{
 		MaxIdleTimeout: 5 * time.Minute,
+		Tracer:         qlog.DefaultTracer,
 	})
 	if err != nil {
 		return err
@@ -157,7 +160,8 @@ func handlePings(conn quic.Connection) {
 			os.Exit(1)
 		}
 
-		buf, err := io.ReadAll(s); err != nil {
+		buf, err := io.ReadAll(s)
+		if err != nil {
 			fmt.Print(err)
 			os.Exit(1)
 		}
